@@ -7,7 +7,7 @@ provider "google" {
 }
 
 module "web" {
-  source                  = "./modules/terraform-google-compute-instance/"
+  source                  = "git::https://github.com/lokesh-purplle/ppl-tf-modules.git//modules/terraform-google-compute-instance?ref=main"
   disk_storage_enabled    = false                       //(optional)set true if ant additonal disk to be attached
   instance_name           = "testing"
   disk_storage_size       = 10
