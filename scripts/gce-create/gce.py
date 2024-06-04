@@ -1,5 +1,7 @@
 from jinja2 import Template
-import os, json
+import os, json, shutil
+from pathlib import Path
+
 
 def preChecks() -> map:
     tf_vars = {}
@@ -43,10 +45,13 @@ def preChecks() -> map:
     tf_vars["business_unit"] = os.environ.get('BUSSINESS_UNIT')
     tf_vars["gcp_image"] = os.environ.get('GCP_IMAGE')
     
+
+
+
     return tf_vars
     
-def createTfVars(template_path,tf_vars):
-    File = open(template_path, 'r') 
+def createTfVars(tfvars_file,tf_vars):
+    File = open('templates/terraform.tfvars.j2', 'r') 
     content = File.read() 
     File.close() 
     
@@ -57,15 +62,15 @@ def createTfVars(template_path,tf_vars):
     print(rendered_form) 
     
     # save the txt file in the form.html 
-    output = open('terraform.tfvars', 'w') 
+    output = open(tfvars_file, 'w') 
     output.write(rendered_form) 
     output.close()
      
     
 
 
-def createBackendTF(template_path,tf_vars):
-    File = open(template_path, 'r') 
+def createBackendTF(backend_tf_file,tf_vars):
+    File = open('templates/backend.tf.j2', 'r') 
     content = File.read() 
     File.close() 
     
@@ -76,17 +81,22 @@ def createBackendTF(template_path,tf_vars):
     print(rendered_form) 
     
     # save the txt file in the form.html 
-    output = open('backend.tf', 'w') 
+    output = open(backend_tf_file, 'w') 
     output.write(rendered_form) 
     output.close()
      
+def copyTemplate(src,dest):
+     print(dest)
+     if Path(dest).exists():
+      pass
+     else:
+      shutil.copytree(src,dest)
 
 if __name__ == '__main__':
     print(preChecks())
     tf_vars = preChecks()
-    createTfVars('templates/terraform.tfvars.j2',tf_vars)
-    createBackendTF('templates/backend.tf.j2',tf_vars)
-
-
-
-
+    # render_template('templates/index_template.html')
+    # '../../tf_vars["business_unit"]/tf_vars["env"]/tf_vars["region"]/instances/tf_vars["vm_name_prefix"]'
+    copyTemplate('../../templates/gce', "../../"+tf_vars['business_unit']+"/"+tf_vars['env']+"/"+tf_vars['region']+"/instances/"+tf_vars['vm_name_prefix'])
+    createTfVars("../../"+tf_vars['business_unit']+"/"+tf_vars['env']+"/"+tf_vars['region']+"/instances/"+tf_vars['vm_name_prefix']+'/terraform.tfvars',tf_vars)
+    createBackendTF("../../"+tf_vars['business_unit']+"/"+tf_vars['env']+"/"+tf_vars['region']+"/instances/"+tf_vars['vm_name_prefix']+'/backend.tf',tf_vars)

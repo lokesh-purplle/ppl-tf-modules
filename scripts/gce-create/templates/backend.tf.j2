@@ -1,0 +1,6 @@
+terraform {
+  backend "gcs" {
+    bucket  = "purplle-terraform-state"
+    prefix  = "{{vars.business_unit}}/{{vars.env}}/{{vars.region}}/instances/{{vars.vm_name_prefix}}/"
+   }
+}
