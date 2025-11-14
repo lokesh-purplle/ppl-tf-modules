@@ -143,7 +143,7 @@ variable "service_account" {
 
 variable "ssh_keys" {
   type        = string
-  description = "SSH public keys to add to the instance metadata. Format: 'username:key username2:key2'. If not provided, SSH keys can be managed via gcloud. (Default: null)"
+  description = "SSH public keys to add to the instance metadata. For multiple keys, use newline-separated format: 'username:key\\nusername2:key2' or pass a multi-line string. If not provided, SSH keys can be managed via gcloud. (Default: null)"
   default     = null
   sensitive   = false
 }

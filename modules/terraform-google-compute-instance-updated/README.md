@@ -32,7 +32,17 @@ module "web" {
 SSH keys can be managed in two ways:
 
 1. **Via Terraform variable** (when `ssh_keys` is provided):
-   - Pass SSH keys as a string in the format: `"username:public_key username2:public_key2"`
+   - Pass SSH keys as a string. For multiple keys, use newline-separated format:
+     ```
+     ssh_keys = "ubuntu:ssh-rsa AAAAB3... ubuntu@host\nlokesh:ssh-rsa AAAAB3... lokesh@host"
+     ```
+   - Or use a multi-line string in terraform.tfvars:
+     ```
+     ssh_keys = <<-EOT
+       ubuntu:ssh-rsa AAAAB3... ubuntu@host
+       lokesh:ssh-rsa AAAAB3... lokesh@host
+     EOT
+     ```
    - Keys will be added to instance metadata during creation
 
 2. **Via gcloud** (when `ssh_keys` is null/not provided):
