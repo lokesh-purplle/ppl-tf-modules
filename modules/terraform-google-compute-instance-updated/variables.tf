@@ -140,3 +140,10 @@ variable "service_account" {
   description = "Specify SA to be used with new VM (Default: will be created new)"
   default     = ""
 }
+
+variable "ssh_keys" {
+  type        = string
+  description = "SSH public keys to add to the instance metadata. Format: 'username:key username2:key2'. If not provided, SSH keys can be managed via gcloud. (Default: null)"
+  default     = null
+  sensitive   = false
+}
