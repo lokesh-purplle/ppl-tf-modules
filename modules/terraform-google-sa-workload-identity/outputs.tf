@@ -1,3 +1,9 @@
+###############################################################################
+# Google Service Account Workload Identity Module
+# -----------------------------------------------------------------------------
+# outputs.tf
+###############################################################################
+
 output "gcp_service_account_email" {
   description = "Email address of GCP service account."
   value       = local.gcp_sa_email
