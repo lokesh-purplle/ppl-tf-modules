@@ -125,7 +125,7 @@ enable_secure_boot = true
   # Execute the script to format & mount /var/opt
   metadata = merge(
     {
-      block-project-ssh-keys = true
+    block-project-ssh-keys = true
       startup-script         = var.disk_storage_enabled ? file("${path.module}/init/mnt_dir.sh") : null
       MOUNT_DIR              = var.disk_storage_mount_path
       REMOTE_FS              = "/dev/sdb"
