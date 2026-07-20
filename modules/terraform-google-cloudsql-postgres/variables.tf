@@ -146,7 +146,7 @@ variable "maintenance_window_update_track" {
 }
 
 variable "database_flags" {
-  description = "List of Cloud SQL flags that are applied to the database server. See [more details](https://cloud.google.com/sql/docs/mysql/flags)"
+  description = "List of Cloud SQL flags that are applied to the database server. See [more details](https://cloud.google.com/sql/docs/postgres/flags)"
   type = list(object({
     name  = string
     value = string
@@ -162,7 +162,7 @@ variable "user_labels" {
 }
 
 variable "deny_maintenance_period" {
-  description = "The Deny Maintenance Period fields to prevent automatic maintenance from occurring during a 90-day time period. See [more details](https://cloud.google.com/sql/docs/mysql/maintenance)"
+  description = "The Deny Maintenance Period fields to prevent automatic maintenance from occurring during a 90-day time period. See [more details](https://cloud.google.com/sql/docs/postgres/maintenance)"
   type = list(object({
     end_date   = string
     start_date = string
@@ -172,22 +172,22 @@ variable "deny_maintenance_period" {
 }
 
 variable "backup_configuration" {
-  description = "The backup_configuration settings subblock for the database setings"
+  description = "The backup_configuration settings subblock for the PostgreSQL instance"
   type = object({
-    binary_log_enabled             = bool
     enabled                        = bool
     start_time                     = string
     location                       = string
     transaction_log_retention_days = string
+    point_in_time_recovery_enabled = bool
     retained_backups               = number
     retention_unit                 = string
   })
   default = {
-    binary_log_enabled             = false
     enabled                        = false
     start_time                     = null
     location                       = null
     transaction_log_retention_days = null
+    point_in_time_recovery_enabled = false
     retained_backups               = null
     retention_unit                 = null
   }
@@ -283,13 +283,13 @@ variable "db_name" {
 }
 
 variable "db_charset" {
-  description = "The charset for the default database"
+  description = "The charset for the default database. This is ignored for PostgreSQL."
   type        = string
   default     = ""
 }
 
 variable "db_collation" {
-  description = "The collation for the default database. Example: 'utf8_general_ci'"
+  description = "The collation for the default database. This is ignored for PostgreSQL."
   type        = string
   default     = ""
 }
@@ -311,15 +311,9 @@ variable "user_name" {
 }
 
 variable "user_host" {
-  description = "The host for the default user"
+  description = "The host for the default user. This is ignored for PostgreSQL and kept for compatibility."
   type        = string
-  default     = "%"
-}
-
-variable "root_password" {
-  description = "Mysql password for the root user. If not set, a random one will be generated and available in the root_password output variable."
-  type        = string
-  default     = ""
+  default     = null
 }
 
 variable "user_password" {

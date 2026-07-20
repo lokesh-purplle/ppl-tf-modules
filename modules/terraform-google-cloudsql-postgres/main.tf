@@ -17,9 +17,9 @@ locals {
     }
   }
 
-  // HA method using REGIONAL availability_type requires binary logs to be enabled
-  binary_log_enabled = var.availability_type == "REGIONAL" ? true : lookup(var.backup_configuration, "binary_log_enabled", null)
-  backups_enabled    = var.availability_type == "REGIONAL" ? true : lookup(var.backup_configuration, "enabled", null)
+  // PostgreSQL backup configuration uses point-in-time recovery instead of binary logs
+  backups_enabled                = var.availability_type == "REGIONAL" ? true : lookup(var.backup_configuration, "enabled", null)
+  point_in_time_recovery_enabled = lookup(var.backup_configuration, "point_in_time_recovery_enabled", null)
 
   retained_backups = lookup(var.backup_configuration, "retained_backups", null)
   retention_unit   = lookup(var.backup_configuration, "retention_unit", null)
@@ -42,7 +42,6 @@ resource "google_sql_database_instance" "default" {
   region              = var.region
   encryption_key_name = var.encryption_key_name
   deletion_protection = var.deletion_protection
-  root_password       = var.root_password != "" ? var.root_password : null
 
   settings {
     edition                     = var.edition  
@@ -55,11 +54,11 @@ resource "google_sql_database_instance" "default" {
     dynamic "backup_configuration" {
       for_each = [var.backup_configuration]
       content {
-        binary_log_enabled             = local.binary_log_enabled
         enabled                        = local.backups_enabled
         start_time                     = lookup(backup_configuration.value, "start_time", null)
         location                       = lookup(backup_configuration.value, "location", null)
         transaction_log_retention_days = lookup(backup_configuration.value, "transaction_log_retention_days", null)
+        point_in_time_recovery_enabled = local.point_in_time_recovery_enabled
 
         dynamic "backup_retention_settings" {
           for_each = local.retained_backups != null || local.retention_unit != null ? [var.backup_configuration] : []
@@ -166,8 +165,6 @@ resource "google_sql_database" "default" {
   name       = var.db_name
   project    = var.project_id
   instance   = google_sql_database_instance.default.name
-  charset    = var.db_charset
-  collation  = var.db_collation
   depends_on = [null_resource.module_depends_on, google_sql_database_instance.default]
 }
 
@@ -175,8 +172,6 @@ resource "google_sql_database" "additional_databases" {
   for_each   = local.databases
   project    = var.project_id
   name       = each.value.name
-  charset    = lookup(each.value, "charset", null)
-  collation  = lookup(each.value, "collation", null)
   instance   = google_sql_database_instance.default.name
   depends_on = [null_resource.module_depends_on, google_sql_database_instance.default]
 }
@@ -222,12 +217,13 @@ resource "random_password" "additional_passwords" {
 }
 
 resource "google_sql_user" "default" {
-  count    = var.enable_default_user ? 1 : 0
-  name     = var.user_name
-  project  = var.project_id
-  instance = google_sql_database_instance.default.name
-  host     = var.user_host
-  password = var.user_password == "" ? random_password.user-password.result : var.user_password
+  count           = var.enable_default_user ? 1 : 0
+  name            = var.user_name
+  project         = var.project_id
+  instance        = google_sql_database_instance.default.name
+  password        = var.user_password == "" ? random_password.user-password.result : var.user_password
+  type            = "BUILT_IN"
+  deletion_policy = var.user_deletion_policy
   depends_on = [
     null_resource.module_depends_on,
     google_sql_database_instance.default,
@@ -236,13 +232,13 @@ resource "google_sql_user" "default" {
 }
 
 resource "google_sql_user" "additional_users" {
-  for_each = local.users
-  project  = var.project_id
-  name     = each.value.name
-  password = each.value.random_password ? random_password.additional_passwords[each.value.name].result : each.value.password
-  host     = each.value.host == null ? var.user_host : each.value.host
-  instance = google_sql_database_instance.default.name
-  type     = coalesce(each.value.type, "BUILT_IN")
+  for_each        = local.users
+  project         = var.project_id
+  name            = each.value.name
+  password        = each.value.random_password ? random_password.additional_passwords[each.value.name].result : each.value.password
+  instance        = google_sql_database_instance.default.name
+  type            = coalesce(each.value.type, "BUILT_IN")
+  deletion_policy = var.user_deletion_policy
   depends_on = [
     null_resource.module_depends_on,
     google_sql_database_instance.default,
