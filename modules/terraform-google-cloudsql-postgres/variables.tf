@@ -187,7 +187,7 @@ variable "backup_configuration" {
     start_time                     = null
     location                       = null
     transaction_log_retention_days = null
-    point_in_time_recovery_enabled = false
+    point_in_time_recovery_enabled = true
     retained_backups               = null
     retention_unit                 = null
   }
